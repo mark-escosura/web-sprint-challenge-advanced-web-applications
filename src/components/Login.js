@@ -1,12 +1,78 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import styled from 'styled-components';
+import axios from 'axios';
+
+const InitialState = {
+    credentials: {
+        username: '',
+        password: ''
+    }
+}
 
 const Login = () => {
     
+    const [ user, setUser ] = useState(InitialState);
+    const [ error, setError ] = useState('');
+    
+    const { push } = useHistory();
+
+    const handleChange = e => {
+        setUser({
+            credentials: {
+                ...user.credentials,
+                [e.target.name]: e.target.value
+            }
+        })
+    }
+
+    const handleLogin = e => {
+        e.preventDefault();
+        axios.post('http://localhost:5000/api/login', user.credentials)
+        .then(resp => {
+            localStorage.setItem('token', resp.data.token);
+            localStorage.setItem('role', resp.data.role);
+            localStorage.setItem('username', resp.data.username);
+            push('/view')
+            // console.log(resp.data)
+        })
+        .catch(error => {
+            setError(error.response.data.error)
+            // console.log(error.resp.data.error)
+        })
+
+    }
+
     return(<ComponentContainer>
         <ModalContainer>
             <h1>Welcome to Blogger Pro</h1>
             <h2>Please enter your account information.</h2>
+            <FormGroup onSubmit={handleLogin}>
+                <Label> Username:
+                    <Input 
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={user.credentials.username}
+                    onChange={handleChange}
+                    />
+                </Label>
+                <Label> Password:
+                    <Input 
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={user.credentials.password}
+                    onChange={handleChange}
+                    />
+                </Label>
+            <Button id="submit">
+                Login
+            </Button>
+            {
+                error && <p id="error">{error}</p>
+            }
+            </FormGroup>
         </ModalContainer>
     </ComponentContainer>);
 }
